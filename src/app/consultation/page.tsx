@@ -5,12 +5,21 @@ import { Send, Bot, User } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Chat() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat();
   const [businessContext, setBusinessContext] = useState('');
+  
+  // Pass the businessContext into the body of the API request
+  const { messages, input, handleInputChange, handleSubmit, isLoading, append } = useChat({
+    body: { businessContext }
+  });
 
   const submitInitialContext = (e: React.FormEvent) => {
     e.preventDefault();
-    handleSubmit(e, { data: { businessContext } });
+    // Vercel AI SDK's handleSubmit ignores empty inputs. 
+    // We use `append` to manually trigger the first message with the textarea content.
+    append({
+      role: 'user',
+      content: businessContext
+    });
   };
 
   return (
@@ -35,10 +44,10 @@ export default function Chat() {
             />
             <button
               onClick={submitInitialContext}
-              disabled={!businessContext.trim()}
+              disabled={!businessContext.trim() || isLoading}
               className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-xl transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
             >
-              Start Consultation
+              {isLoading ? "Starting..." : "Start Consultation"}
             </button>
           </div>
         )}
@@ -60,7 +69,7 @@ export default function Chat() {
             )}
           </div>
         ))}
-        {isLoading && (
+        {isLoading && messages.length > 0 && (
           <div className="flex gap-4 justify-start">
             <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0 border border-blue-200 animate-pulse">
               <Bot className="w-5 h-5 text-blue-600" />

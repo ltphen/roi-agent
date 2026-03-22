@@ -1,21 +1,18 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
-import { Send, Bot, User } from 'lucide-react';
+import { Send, Bot, User, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Chat() {
   const [businessContext, setBusinessContext] = useState('');
   
-  // Pass the businessContext into the body of the API request
-  const { messages, input, handleInputChange, handleSubmit, isLoading, append } = useChat({
+  const { messages, input, handleInputChange, handleSubmit, isLoading, append, error } = useChat({
     body: { businessContext }
   });
 
   const submitInitialContext = (e: React.FormEvent) => {
     e.preventDefault();
-    // Vercel AI SDK's handleSubmit ignores empty inputs. 
-    // We use `append` to manually trigger the first message with the textarea content.
     append({
       role: 'user',
       content: businessContext
@@ -69,7 +66,8 @@ export default function Chat() {
             )}
           </div>
         ))}
-        {isLoading && messages.length > 0 && (
+        
+        {isLoading && messages.length > 0 && !error && (
           <div className="flex gap-4 justify-start">
             <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0 border border-blue-200 animate-pulse">
               <Bot className="w-5 h-5 text-blue-600" />
@@ -78,6 +76,18 @@ export default function Chat() {
               <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
               <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
               <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+            </div>
+          </div>
+        )}
+
+        {error && (
+          <div className="flex gap-4 justify-center my-4">
+            <div className="bg-red-50 text-red-600 border border-red-200 rounded-2xl px-5 py-4 shadow-sm flex items-start gap-3 max-w-2xl">
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-semibold mb-1">Connection Error</h3>
+                <p className="text-sm whitespace-pre-wrap">{error.message || "Failed to connect to the AI provider. Check your API keys and server logs."}</p>
+              </div>
             </div>
           </div>
         )}

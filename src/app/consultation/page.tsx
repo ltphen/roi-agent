@@ -1,12 +1,17 @@
 'use client';
 
-import { useChat } from 'ai/react';
+import { useChat } from '@ai-sdk/react';
 import { Send, Bot, User } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Chat() {
   const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat();
   const [businessContext, setBusinessContext] = useState('');
+
+  const submitInitialContext = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSubmit(e, { data: { businessContext } });
+  };
 
   return (
     <div className="flex flex-col h-screen bg-gray-50 text-gray-900 font-sans">
@@ -29,7 +34,7 @@ export default function Chat() {
               onChange={(e) => setBusinessContext(e.target.value)}
             />
             <button
-              onClick={() => handleSubmit(new Event('submit') as any, { data: { businessContext } })}
+              onClick={submitInitialContext}
               disabled={!businessContext.trim()}
               className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-xl transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
             >
@@ -39,13 +44,13 @@ export default function Chat() {
         )}
 
         {messages.map(m => (
-          <div key={m.id} className={\`flex gap-4 \${m.role === 'user' ? 'justify-end' : 'justify-start'}\`}>
+          <div key={m.id} className={`flex gap-4 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             {m.role !== 'user' && (
               <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0 border border-blue-200">
                 <Bot className="w-5 h-5 text-blue-600" />
               </div>
             )}
-            <div className={\`max-w-[85%] rounded-2xl px-5 py-4 shadow-sm text-base leading-relaxed \${m.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white border border-gray-100 rounded-bl-none'}\`}>
+            <div className={`max-w-[85%] rounded-2xl px-5 py-4 shadow-sm text-base leading-relaxed ${m.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white border border-gray-100 rounded-bl-none'}`}>
               <p className="whitespace-pre-wrap">{m.content}</p>
             </div>
             {m.role === 'user' && (

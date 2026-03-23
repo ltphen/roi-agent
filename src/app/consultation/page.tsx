@@ -2,7 +2,7 @@
 
 import { useChat } from '@ai-sdk/react';
 import { Send, Bot, User, AlertCircle, CheckCircle2, Zap, TrendingUp, Clock, Share2, Twitter, Linkedin, Copy } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import confetti from 'canvas-confetti';
 
 interface ReportData {
@@ -35,35 +35,7 @@ export default function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  useEffect(() => {
-    // Check if the AI just signaled it is ready for the report
-    const lastMessage = messages[messages.length - 1];
-    if (lastMessage?.role === 'assistant' && lastMessage.content.includes('[READY_FOR_REPORT]') && !reportGenerating && !reportData) {
-      generateFinalReport();
-    }
-  }, [messages]);
-
-  const generateFinalReport = async () => {
-    setReportGenerating(true);
-    try {
-      const res = await fetch('/api/generate-report', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages })
-      });
-      if (!res.ok) throw new Error('Failed to generate report');
-      const data = await res.json();
-      setReportData(data);
-      triggerConfetti();
-    } catch (err) {
-      console.error(err);
-      alert("There was an error generating your final roadmap. Please try again.");
-    } finally {
-      setReportGenerating(false);
-    }
-  };
-
-  const triggerConfetti = () => {
+  const triggerConfetti = useCallback(() => {
     const duration = 3000;
     const end = Date.now() + duration;
 
@@ -88,10 +60,38 @@ export default function Chat() {
       }
     };
     frame();
-  };
+  }, []);
+
+  const generateFinalReport = useCallback(async () => {
+    if (reportGenerating || reportData) return;
+    setReportGenerating(true);
+    try {
+      const res = await fetch('/api/generate-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages })
+      });
+      if (!res.ok) throw new Error('Failed to generate report');
+      const data = await res.json();
+      setReportData(data);
+      triggerConfetti();
+    } catch (err) {
+      console.error(err);
+      alert("There was an error generating your final roadmap. Please try again.");
+    } finally {
+      setReportGenerating(false);
+    }
+  }, [messages, reportGenerating, reportData, triggerConfetti]);
+
+  useEffect(() => {
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage?.role === 'assistant' && lastMessage.content.includes('[READY_FOR_REPORT]')) {
+      generateFinalReport();
+    }
+  }, [messages, generateFinalReport]);
 
   const handleShare = async () => {
-    const shareText = `Just got my custom AI Adoption Roadmap for my business.\\n\\n"${reportData?.viralQuote}"\\n\\nBuilt by ROI Agent.`;
+    const shareText = `Just got my custom AI Adoption Roadmap for my business.\n\n"${reportData?.viralQuote}"\n\nBuilt by ROI Agent.`;
     
     if (navigator.share) {
       try {
@@ -104,7 +104,7 @@ export default function Chat() {
         console.log('Error sharing:', err);
       }
     } else {
-      navigator.clipboard.writeText(`${shareText}\\n${window.location.origin}`);
+      navigator.clipboard.writeText(`${shareText}\n${window.location.origin}`);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -118,14 +118,12 @@ export default function Chat() {
     });
   };
 
-  // Filter out the internal system trigger from UI
   const displayMessages = messages.filter(m => !m.content.includes('[READY_FOR_REPORT]'));
 
   if (reportData) {
     return (
       <div className="min-h-screen bg-gray-50 text-gray-900 font-sans py-12 px-4 sm:px-6 lg:px-8 selection:bg-blue-100">
         <div className="max-w-4xl mx-auto">
-          {/* Stunning Report Header */}
           <div className="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 rounded-3xl p-8 md:p-12 text-white shadow-2xl mb-8 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl -mr-20 -mt-20"></div>
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-cyan-400 opacity-10 rounded-full blur-2xl -ml-10 -mb-10"></div>
@@ -144,11 +142,10 @@ export default function Chat() {
             </div>
           </div>
 
-          {/* Viral Share Banner */}
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-blue-100 mb-8 flex flex-col md:flex-row items-center justify-between gap-6 border-l-4 border-l-blue-500">
             <div className="flex-1">
               <p className="text-gray-500 text-sm font-medium uppercase tracking-wider mb-2">Your AI Thesis</p>
-              <p className="text-xl font-bold italic text-gray-800">"{reportData.viralQuote}"</p>
+              <p className="text-xl font-bold italic text-gray-800">&quot;{reportData.viralQuote}&quot;</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 shrink-0 w-full md:w-auto">
               <button 
@@ -159,7 +156,7 @@ export default function Chat() {
                 {copied ? 'Copied!' : 'Share Roadmap'}
               </button>
               <a 
-                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Just got my custom AI Adoption Roadmap.\\n\\n"${reportData.viralQuote}"\\n\\nBuilt by @roia_agent`)}`}
+                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Just got my custom AI Adoption Roadmap.\n\n"${reportData.viralQuote}"\n\nBuilt by @roia_agent`)}`}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center justify-center gap-2 bg-[#1DA1F2] hover:bg-[#1a8cd8] text-white px-4 py-3 rounded-xl font-medium transition-colors"
@@ -167,7 +164,7 @@ export default function Chat() {
                 <Twitter className="w-5 h-5" />
               </a>
               <a 
-                href={`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(`Just got my custom AI Adoption Roadmap.\\n\\n"${reportData.viralQuote}"\\n\\nI'm looking at implementing some massive operational efficiencies this quarter.`)}`}
+                href={`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(`Just got my custom AI Adoption Roadmap.\n\n"${reportData.viralQuote}"\n\nI'm looking at implementing some massive operational efficiencies this quarter.`)}`}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center justify-center gap-2 bg-[#0A66C2] hover:bg-[#095196] text-white px-4 py-3 rounded-xl font-medium transition-colors"
@@ -179,7 +176,6 @@ export default function Chat() {
 
           <div className="grid md:grid-cols-3 gap-8 mb-8">
             <div className="md:col-span-2 space-y-8">
-              {/* Opportunities */}
               <div>
                 <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
                   <TrendingUp className="w-6 h-6 text-blue-600" /> 
@@ -213,7 +209,6 @@ export default function Chat() {
             </div>
 
             <div className="space-y-8">
-              {/* Tools Stack */}
               <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
                 <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
                   <Bot className="w-5 h-5 text-indigo-600" /> 
@@ -308,7 +303,6 @@ export default function Chat() {
           </div>
         )}
 
-        {/* Full screen loading overlay for report generation */}
         {reportGenerating && (
           <div className="absolute inset-0 z-50 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center rounded-3xl">
             <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-6"></div>

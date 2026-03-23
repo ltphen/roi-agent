@@ -1,0 +1,20 @@
+[
+  { 
+    "slug": "ecommerce", 
+    "title": "AI Strategy for E-commerce | ROI Agent", 
+    "h1": "Automate Your E-commerce Growth with AI",
+    "heroText": "Get a custom AI adoption roadmap tailored for online retailers."
+  },
+  { 
+    "slug": "digital-agencies", 
+    "title": "AI Strategy for Digital Agencies | ROI Agent", 
+    "h1": "Scale Your Agency Margins with AI",
+    "heroText": "Stop wasting billable hours. Get your agency's AI automation roadmap."
+  },
+  { 
+    "slug": "real-estate", 
+    "title": "AI Strategy for Real Estate | ROI Agent", 
+    "h1": "Close More Deals with AI Automation",
+    "heroText": "Automate client follow-ups and property matching with a custom AI strategy."
+  }
+]

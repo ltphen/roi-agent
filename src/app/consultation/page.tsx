@@ -198,7 +198,7 @@ export default function Chat() {
             <div className="absolute left-0 top-0 w-2 h-full bg-gradient-to-b from-cyan-400 to-blue-600"></div>
             <div className="flex-1">
               <p className="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-3">Your AI Thesis</p>
-              <p className="text-2xl font-bold italic text-gray-900 leading-snug">"{reportData.viralQuote}"</p>
+              <p className="text-2xl font-bold italic text-gray-900 leading-snug">&quot;{reportData.viralQuote}&quot;</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 shrink-0 w-full md:w-auto">
               <button 

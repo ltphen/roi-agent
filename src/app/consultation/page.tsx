@@ -1,13 +1,17 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
-import { Send, Bot, User, AlertCircle, CheckCircle2, Zap, TrendingUp, Clock, Share2, Twitter, Linkedin, Copy } from 'lucide-react';
+import { Send, Bot, User, AlertCircle, CheckCircle2, Zap, TrendingUp, Clock, Share2, Twitter, Linkedin, Activity, DollarSign } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import confetti from 'canvas-confetti';
 
 interface ReportData {
   companyName: string;
   executiveSummary: string;
+  readinessScore: number;
+  industry: string;
+  totalTimeSaved: string;
+  costReduction: string;
   opportunities: {
     area: string;
     solution: string;
@@ -90,21 +94,31 @@ export default function Chat() {
     }
   }, [messages, generateFinalReport]);
 
+  const getDynamicOgUrl = () => {
+    if (!reportData) return window.location.origin;
+    const ogUrl = new URL('/api/og', window.location.origin);
+    ogUrl.searchParams.set('company', reportData.companyName);
+    ogUrl.searchParams.set('score', reportData.readinessScore.toString());
+    ogUrl.searchParams.set('time', reportData.totalTimeSaved);
+    return ogUrl.toString();
+  };
+
   const handleShare = async () => {
-    const shareText = `Just got my custom AI Adoption Roadmap for my business.\n\n"${reportData?.viralQuote}"\n\nBuilt by ROI Agent.`;
+    const shareText = `Just got my custom AI Adoption Roadmap for my business.\\n\\n"${reportData?.viralQuote}"\\n\\nTop ${100 - (reportData?.readinessScore || 90)}% AI Readiness in ${reportData?.industry || 'my industry'}.\\n\\nBuilt by ROI Agent.`;
+    const shareUrl = getDynamicOgUrl();
     
     if (navigator.share) {
       try {
         await navigator.share({
           title: 'My AI Adoption Roadmap',
           text: shareText,
-          url: window.location.origin,
+          url: window.location.origin, 
         });
       } catch (err) {
         console.log('Error sharing:', err);
       }
     } else {
-      navigator.clipboard.writeText(`${shareText}\n${window.location.origin}`);
+      navigator.clipboard.writeText(`${shareText}\\n\\nSee the full breakdown here: ${window.location.origin}`);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -124,50 +138,89 @@ export default function Chat() {
     return (
       <div className="min-h-screen bg-gray-50 text-gray-900 font-sans py-12 px-4 sm:px-6 lg:px-8 selection:bg-blue-100">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 rounded-3xl p-8 md:p-12 text-white shadow-2xl mb-8 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl -mr-20 -mt-20"></div>
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-cyan-400 opacity-10 rounded-full blur-2xl -ml-10 -mb-10"></div>
+          {/* Bragging Rights Header */}
+          <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-8 md:p-12 text-white shadow-2xl mb-8 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-400 opacity-5 rounded-full blur-3xl -mr-20 -mt-20"></div>
             
             <div className="relative z-10">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-sm font-medium mb-6">
-                <SparklesIcon className="w-4 h-4 text-cyan-300" />
-                <span>AI Adoption Roadmap Generated</span>
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 border-b border-slate-700/50 pb-8">
+                <div>
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-sm font-medium mb-4">
+                    <SparklesIcon className="w-4 h-4" />
+                    <span>AI Roadmap Generated</span>
+                  </div>
+                  <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+                    {reportData.companyName}
+                  </h1>
+                </div>
+                
+                {/* Readiness Score Badge */}
+                <div className="flex flex-col items-center bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shrink-0">
+                  <div className="text-sm text-slate-400 uppercase tracking-wider font-semibold mb-2">AI Readiness Score</div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">{reportData.readinessScore}</span>
+                    <span className="text-xl text-slate-500 font-bold">/100</span>
+                  </div>
+                  <div className="mt-2 text-sm text-cyan-300 font-medium">Top {100 - reportData.readinessScore}% in {reportData.industry}</div>
+                </div>
               </div>
-              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
-                {reportData.companyName}
-              </h1>
-              <p className="text-lg md:text-xl text-blue-100 leading-relaxed max-w-2xl">
+              
+              <p className="text-lg md:text-xl text-slate-300 leading-relaxed max-w-3xl">
                 {reportData.executiveSummary}
               </p>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-blue-100 mb-8 flex flex-col md:flex-row items-center justify-between gap-6 border-l-4 border-l-blue-500">
+          {/* Bold Visual ROI Blocks */}
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex items-center gap-6">
+              <div className="w-16 h-16 rounded-2xl bg-green-50 flex items-center justify-center shrink-0">
+                <Clock className="w-8 h-8 text-green-600" />
+              </div>
+              <div>
+                <p className="text-gray-500 font-semibold uppercase tracking-wider text-sm mb-1">Projected Time Saved</p>
+                <p className="text-3xl font-black text-gray-900">{reportData.totalTimeSaved}</p>
+              </div>
+            </div>
+            <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex items-center gap-6">
+              <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center shrink-0">
+                <DollarSign className="w-8 h-8 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-gray-500 font-semibold uppercase tracking-wider text-sm mb-1">Est. Cost Reduction</p>
+                <p className="text-3xl font-black text-gray-900">{reportData.costReduction}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Viral Share Banner */}
+          <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 mb-8 flex flex-col md:flex-row items-center justify-between gap-8 bg-[url('/noise.png')] bg-repeat relative overflow-hidden">
+            <div className="absolute left-0 top-0 w-2 h-full bg-gradient-to-b from-cyan-400 to-blue-600"></div>
             <div className="flex-1">
-              <p className="text-gray-500 text-sm font-medium uppercase tracking-wider mb-2">Your AI Thesis</p>
-              <p className="text-xl font-bold italic text-gray-800">&quot;{reportData.viralQuote}&quot;</p>
+              <p className="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-3">Your AI Thesis</p>
+              <p className="text-2xl font-bold italic text-gray-900 leading-snug">"{reportData.viralQuote}"</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 shrink-0 w-full md:w-auto">
               <button 
                 onClick={handleShare}
-                className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all shadow-md hover:shadow-lg"
+                className="flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-8 py-4 rounded-2xl font-bold transition-all shadow-md hover:shadow-xl hover:-translate-y-0.5"
               >
                 {copied ? <CheckCircle2 className="w-5 h-5" /> : <Share2 className="w-5 h-5" />}
-                {copied ? 'Copied!' : 'Share Roadmap'}
+                {copied ? 'Copied Link!' : 'Share Roadmap'}
               </button>
               <a 
-                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Just got my custom AI Adoption Roadmap.\n\n"${reportData.viralQuote}"\n\nBuilt by @roia_agent`)}`}
+                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Just got my custom AI Adoption Roadmap.\\n\\n"${reportData.viralQuote}"\\n\\nTop ${100 - reportData.readinessScore}% AI Readiness in ${reportData.industry}.\\n\\nBuilt by @roia_agent`)}`}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center justify-center gap-2 bg-[#1DA1F2] hover:bg-[#1a8cd8] text-white px-4 py-3 rounded-xl font-medium transition-colors"
+                className="flex items-center justify-center gap-2 bg-[#1DA1F2] hover:bg-[#1a8cd8] text-white px-5 py-4 rounded-2xl font-bold transition-colors shadow-sm"
               >
                 <Twitter className="w-5 h-5" />
               </a>
               <a 
-                href={`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(`Just got my custom AI Adoption Roadmap.\n\n"${reportData.viralQuote}"\n\nI'm looking at implementing some massive operational efficiencies this quarter.`)}`}
+                href={`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(`Just got my custom AI Adoption Roadmap.\\n\\n"${reportData.viralQuote}"\\n\\nTop ${100 - reportData.readinessScore}% AI Readiness in ${reportData.industry}.\\n\\nI'm looking at implementing some massive operational efficiencies this quarter.`)}`}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center justify-center gap-2 bg-[#0A66C2] hover:bg-[#095196] text-white px-4 py-3 rounded-xl font-medium transition-colors"
+                className="flex items-center justify-center gap-2 bg-[#0A66C2] hover:bg-[#095196] text-white px-5 py-4 rounded-2xl font-bold transition-colors shadow-sm"
               >
                 <Linkedin className="w-5 h-5" />
               </a>
@@ -176,30 +229,30 @@ export default function Chat() {
 
           <div className="grid md:grid-cols-3 gap-8 mb-8">
             <div className="md:col-span-2 space-y-8">
+              {/* Opportunities */}
               <div>
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                  <TrendingUp className="w-6 h-6 text-blue-600" /> 
+                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 text-gray-900">
+                  <Activity className="w-6 h-6 text-blue-600" /> 
                   High-Impact Opportunities
                 </h2>
                 <div className="space-y-4">
                   {reportData.opportunities.map((opp, i) => (
-                    <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow relative overflow-hidden">
-                      <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-bold text-lg">{opp.area}</h3>
-                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-50 text-green-700 text-xs font-bold uppercase tracking-wide">
-                          <Zap className="w-3 h-3" /> {opp.roiEstimate}
+                    <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:border-blue-200 transition-colors">
+                      <div className="flex justify-between items-start mb-3">
+                        <h3 className="font-bold text-xl text-gray-900">{opp.area}</h3>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-50 text-green-700 text-sm font-bold tracking-wide">
+                          <Zap className="w-4 h-4" /> {opp.roiEstimate}
                         </span>
                       </div>
-                      <p className="text-gray-900 font-medium mb-4">{opp.solution}</p>
-                      <div className="flex gap-4 text-sm">
-                        <div className="flex items-center gap-1.5 text-gray-500">
-                          <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                          Impact: <strong className="text-gray-700">{opp.impact}</strong>
+                      <p className="text-gray-600 text-lg mb-5 leading-relaxed">{opp.solution}</p>
+                      <div className="flex gap-6 text-sm">
+                        <div className="flex items-center gap-2 text-gray-500">
+                          <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                          Impact: <strong className="text-gray-900">{opp.impact}</strong>
                         </div>
-                        <div className="flex items-center gap-1.5 text-gray-500">
-                          <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                          Effort: <strong className="text-gray-700">{opp.effort}</strong>
+                        <div className="flex items-center gap-2 text-gray-500">
+                          <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                          Effort: <strong className="text-gray-900">{opp.effort}</strong>
                         </div>
                       </div>
                     </div>
@@ -209,16 +262,17 @@ export default function Chat() {
             </div>
 
             <div className="space-y-8">
-              <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
-                <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                  <Bot className="w-5 h-5 text-indigo-600" /> 
+              {/* Tools Stack */}
+              <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+                <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-900">
+                  <Bot className="w-6 h-6 text-indigo-600" /> 
                   Recommended Stack
                 </h2>
                 <div className="space-y-6">
                   {reportData.recommendedTools.map((tool, i) => (
                     <div key={i} className="group">
-                      <h4 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{tool.name}</h4>
-                      <p className="text-sm text-gray-500 leading-relaxed mt-1">{tool.description}</p>
+                      <h4 className="font-bold text-lg text-gray-900 group-hover:text-blue-600 transition-colors">{tool.name}</h4>
+                      <p className="text-gray-500 leading-relaxed mt-1.5">{tool.description}</p>
                     </div>
                   ))}
                 </div>

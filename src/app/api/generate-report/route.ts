@@ -17,6 +17,10 @@ The tone should be executive, authoritative, and visionary. Make the business ow
       schema: z.object({
         companyName: z.string().describe("The name or a short description of the user's business."),
         executiveSummary: z.string().describe("A powerful 2-3 sentence summary of why this business is primed for AI adoption."),
+        readinessScore: z.number().min(60).max(99).describe("A high AI readiness score between 60 and 99. Skew high to make them feel good."),
+        industry: z.string().describe("The specific industry they operate in (e.g., Dental, E-commerce, SaaS)."),
+        totalTimeSaved: z.string().describe("Aggregate estimated time saved across all solutions (e.g., '40 Hours/Week')."),
+        costReduction: z.string().describe("Aggregate estimated cost reduction percentage (e.g., '15%')."),
         opportunities: z.array(z.object({
           area: z.string().describe("The business area (e.g., Customer Support, Lead Gen, Operations)."),
           solution: z.string().describe("The specific AI solution or workflow."),

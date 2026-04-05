@@ -1,5 +1,6 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+This repository is a showcase of how to configure OpenClaw as your CTO to build and push code for you.
 
+Link to the tutorial: [YouTube link](https://www.youtube.com/watch?v=x0_lPO60yxc)
 ## Getting Started
 
 First, run the development server:
